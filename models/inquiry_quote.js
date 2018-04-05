@@ -67,6 +67,7 @@ const InquiryQuoteSchema = new Schema({
     load: [LoadSchema],
     discharge: [DischargeSchema],
     user: {type: Schema.Types.ObjectId, ref: 'User'},
+    added_by: {type: String},
     dateadded: { type: Date, default: Date.now }
 });
 

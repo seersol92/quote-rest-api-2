@@ -15,12 +15,27 @@ const companyRegister = require('./routes/company_register');  //Import routes f
 const vesselRegister = require('./routes/vessel_register');  //Import routes for "vesselRegister" area of site
 const inquiryContent = require('./routes/inquiry_content');  //Import routes for "inquiry_content" area of site
 const inquiryQuote = require('./routes/inquiry_quote');  //Import routes for "inquiry_quote" area of site
+const user = require('./routes/user');
+// ES6 promises
+mongoose.Promise = Promise;
 
-mongoose.Promise = global.Promise;
-mongoose.connect(config.uri, { useMongoClient: true }, (err)=>{
-  if(err) { console.log('Could Not Connect To Database:', err); }
-  else { console.log('Connected to Database:'+config.db); }
+// mongodb connection
+mongoose.connect(config.uri, {
+  useMongoClient: true,
+  promiseLibrary: global.Promise
 });
+
+var db = mongoose.connection;
+
+// mongodb error
+db.on('error', console.error.bind(console, 'connection error:'));
+
+// mongodb connection open
+db.once('open', () => {
+  console.log(`Connected to Mongo at: ${new Date()}`)
+});
+
+
 // Only for development purpose no need for production version
 // not a save  way
 
@@ -42,7 +57,7 @@ app.use('/company-register', companyRegister);
 app.use('/vessel-register', vesselRegister);
 app.use('/content', inquiryContent);
 app.use('/inquiry-quote', inquiryQuote);
-
+app.use('/user', user);
 app.listen(443, ()=>{
   console.log('listening on the port 443');
 });

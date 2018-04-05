@@ -1,0 +1,20 @@
+const express = require('express');
+const router = express.Router();
+//access token middle ware
+// Require controller modules.
+const user_controller = require('../controllers/userController');
+/// User ROUTES ///
+
+// GET User List.
+router.get('/', user_controller.user_list);
+
+// POST request for user.
+router.post('/create', user_controller.create_user);
+
+// POST request for update.
+router.post('/update', user_controller.user_update);
+
+// POST request for deleting
+router.post('/delete', user_controller.user_delete_post);
+
+module.exports = router;

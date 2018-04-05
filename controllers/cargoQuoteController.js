@@ -124,7 +124,7 @@ exports.cargo_update_post = function(req, res) {
 };
 
 
-// Handle book delete on POST.
+// Handle  delete on POST.
 exports.cargo_delete_post = function(req, res) {
     CargoQuote.deleteOne({ _id : req.body.cargo_id } , function(err, cargo_list) {
         if(err){

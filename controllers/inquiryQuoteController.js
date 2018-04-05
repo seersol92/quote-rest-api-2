@@ -92,7 +92,8 @@ exports.create_post = function(req, res) {
         units: req.body.quote.units,
         required_validity: req.body.quote.required_validity,
         load: loadData,
-        discharge: dischargeList
+        discharge: dischargeList, 
+        added_by: req.body.added_by
     }); 
     pat.save(function(err, quote){
         if(err) {
