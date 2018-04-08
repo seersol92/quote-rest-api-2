@@ -14,6 +14,9 @@ router.post('/create', inquiry_controller.create_post);
 // POST request for update price.
 router.post('/update-price', inquiry_controller.quote_update_price);
 
+// update details
+router.post('/update-detail', inquiry_controller.update_detail);
+
 // POST request to delete  Post.
 router.post('/delete', inquiry_controller.quote_delete_post);
 

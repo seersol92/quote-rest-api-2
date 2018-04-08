@@ -1,4 +1,5 @@
 const inquiryQuote = require('../models/inquiry_quote'); //import  model schema
+var ObjectId = require('mongodb').ObjectID; 
 
 function upperCaseFirst(str){
     return str.charAt(0).toUpperCase() + str.substring(1);
@@ -128,11 +129,20 @@ exports.quote_delete_post = function(req, res) {
         }
     });
 };
-
-
 // Handle  delete on POST.
 exports.quote_update_price = function(req, res) {
-    inquiryQuote.findByIdAndUpdate(req.body.quote, { $set: { pricing: req.body.new_price }}, function (err) {
+     
+    const updated_price =  req.body.updated_price;
+    inquiryQuote.findByIdAndUpdate(req.body.quote_id, { $push: { price: 
+        {
+            price:  updated_price.price,
+            date: updated_price.date,
+            time: updated_price.time,
+            comments: updated_price.comments,
+            quoted_by: updated_price.quoted_by,
+            is_active: updated_price.is_active
+            
+        } }}, function (err) {
         if(err) {
             res.json({
                success: false,
@@ -146,7 +156,6 @@ exports.quote_update_price = function(req, res) {
         }
     });
 };
-
 
 // Handle Inquiry Qoute details delete on POST.
 exports.quote_delete_details_post = function(req, res) {
@@ -168,4 +177,108 @@ exports.quote_delete_details_post = function(req, res) {
             }
         }
     );
+};
+
+function updateLoad (req, res)
+{
+    const data = req.body.data;
+    inquiryQuote.update(
+        { 
+          "_id"      : ObjectId(req.body.quote_id) , 
+          "load._id" : ObjectId(req.body.sub_doc_id)
+        },
+        { 
+        $set : 
+        { 
+            "load.$.supplier": req.body.data.supplier,
+            "load.$.port": req.body.data.port,
+            "load.$.load_terminal": req.body.data.load_terminal,
+            "load.$.cargo_grade": req.body.data.cargo_grade,
+            "load.$.api": req.body.data.api,
+            "load.$.volume": req.body.data.volume,
+            "load.$.date1": req.body.data.date1,
+            "load.$.date2": req.body.data.date2,
+            "load.$.window_1": req.body.data.window_1,
+            "load.$.days_before_1": req.body.data.days_before_1,
+            "load.$.window_2": req.body.data.window_2,
+            "load.$.days_before_2": req.body.data.days_before_2,
+            "load.$.comments": req.body.data.comments,
+            "load.$.volume_tolerance": req.body.data.volume_tolerance,
+            "load.$.loading_tolerance": req.body.data.loading_tolerance
+        } 
+        },
+        function(err, numAffected) {
+            if(err || numAffected.ok == 0) {
+                res.json({
+                   success: false,
+                   message:'Operation Failed. There is something wrong with this Load detail.',
+                   error: err,
+                   q_id: req.body.quote_id,
+                   s_doc: req.body.sub_doc_id
+
+                });
+            } else {
+                res.json({
+                    success: true,
+                    message: 'Load detail has been updated successfully!!'
+                });
+            }
+        }
+      )
+}
+
+function updateDischarge (req, res)
+{
+    inquiryQuote.update(
+        { 
+          "_id"      : ObjectId(req.body.quote_id) , 
+          "discharge._id" : ObjectId(req.body.sub_doc_id)
+        },
+        { 
+        $set : 
+        { 
+            "discharge.$.receiver": req.body.data.receiver,
+            "discharge.$.port": req.body.data.port,
+            "discharge.$.discharge_terminal": req.body.data.discharge_terminal,
+            "discharge.$.cargo_grade": req.body.data.cargo_grade,
+            "discharge.$.api": req.body.data.api,
+            "discharge.$.volume": req.body.data.volume,
+            "discharge.$.date1": req.body.data.date1,
+            "discharge.$.date2": req.body.data.date2,
+            "discharge.$.window_1": req.body.data.window_1,
+            "discharge.$.days_before_1": req.body.data.days_before_1,
+            "discharge.$.window_2": req.body.data.window_2,
+            "discharge.$.days_before_2": req.body.data.days_before_2,
+            "discharge.$.comments": req.body.data.comments,
+            "discharge.$.volume_tolerance": req.body.data.volume_tolerance,
+            "discharge.$.discharge_tolerance": req.body.data.discharge_tolerance
+        } 
+        },
+        function(err, numAffected) {
+            if(err || numAffected.ok == 0) {
+                res.json({
+                   success: false,
+                   message:'Operation Failed. There is something wrong with this Discharge detail.',
+                   error: err,
+                   q_id: req.body.quote_id,
+                   s_doc: req.body.sub_doc_id
+
+                });
+            } else {
+                res.json({
+                    success: true,
+                    message: 'Discharge detail has been updated successfully!!'
+                });
+            }
+        }
+      )
+}
+exports.update_detail = function(req, res) {
+
+    const key = req.body.key;
+    if (key == 'load' ) {
+        updateLoad(req, res);
+    } else if (key == 'discharge') {
+        updateDischarge(req, res);        
+    }
 };

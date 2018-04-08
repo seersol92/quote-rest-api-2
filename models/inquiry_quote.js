@@ -47,6 +47,20 @@ const DischargeSchema = new Schema({
     discharge_tolerance: String
 });
 
+/**
+ * @Child Schema Price 
+ * 
+ */
+
+const PriceSchema = new Schema({
+    price: String,
+    date: {type: Date},
+    time: String,
+    comments: String,
+    quoted_by: String,
+    is_active: String
+});
+
 /*
  * @ PArent Schema: Inquiry Quote
  *  
@@ -64,6 +78,7 @@ const InquiryQuoteSchema = new Schema({
     pricing: {type: String},
     units: {type: String},
     required_validity: {type: String},
+    price: [PriceSchema],
     load: [LoadSchema],
     discharge: [DischargeSchema],
     user: {type: Schema.Types.ObjectId, ref: 'User'},
