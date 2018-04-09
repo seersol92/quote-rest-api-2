@@ -65,6 +65,7 @@ const PriceSchema = new Schema({
  * @ PArent Schema: Inquiry Quote
  *  
 */
+
 const InquiryQuoteSchema = new Schema({
     segergation: {type: String},
     tank_preparation: {type: String},
