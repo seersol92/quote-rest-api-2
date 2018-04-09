@@ -91,7 +91,8 @@ exports.create_post = function(req, res) {
         itinerary_required: req.body.quote.itinerary_required,
         pricing: req.body.quote.pricing,
         units: req.body.quote.units,
-        required_validity: req.body.quote.required_validity,
+        required_validity_date: req.body.quote.required_validity_date,
+        required_validity_time: req.body.quote.required_validity_time,
         load: loadData,
         discharge: dischargeList, 
         added_by: req.body.added_by
@@ -129,7 +130,38 @@ exports.quote_delete_post = function(req, res) {
         }
     });
 };
-// Handle  delete on POST.
+
+// Handle  price status  on POST. Accept / Reject
+exports.quote_update_price_status = function(req, res) {
+    inquiryQuote.update(
+        { 
+          "_id"       : ObjectId(req.body.quote_id) , 
+          "price._id" : ObjectId(req.body.price_id)
+        },
+        { 
+        $set : 
+        { 
+            "price.$.status": req.body.status
+        } 
+        },
+        function(err, numAffected) {
+            if(err || numAffected.ok == 0) {
+                res.json({
+                   success: false,
+                   message:'Operation Failed. There is something wrong to ' + req.body.status + ' price.',
+                   error: err
+                });
+            } else {
+                res.json({
+                    success: true,
+                    message: 'Quote price has been ' +req.body.status+ ' successfully!!'
+                });
+            }
+        }
+      )
+};
+
+// Handle  price  on POST.
 exports.quote_update_price = function(req, res) {
      
     const updated_price =  req.body.updated_price;
@@ -140,8 +172,8 @@ exports.quote_update_price = function(req, res) {
             time: updated_price.time,
             comments: updated_price.comments,
             quoted_by: updated_price.quoted_by,
-            is_active: updated_price.is_active
-            
+            status: updated_price.status
+
         } }}, function (err) {
         if(err) {
             res.json({

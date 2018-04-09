@@ -58,7 +58,7 @@ const PriceSchema = new Schema({
     time: String,
     comments: String,
     quoted_by: String,
-    is_active: String
+    status: String
 });
 
 /*
@@ -77,7 +77,8 @@ const InquiryQuoteSchema = new Schema({
     itinerary_required: {type: String},
     pricing: {type: String},
     units: {type: String},
-    required_validity: {type: String},
+    required_validity_date: {type: String},
+    required_validity_time: {type: String},    
     price: [PriceSchema],
     load: [LoadSchema],
     discharge: [DischargeSchema],
