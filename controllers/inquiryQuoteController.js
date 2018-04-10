@@ -31,6 +31,21 @@ exports.content_detail = function(req, res) {
     res.send('NOT IMPLEMENTED: Book detail: ' + req.params.id);
 };
 
+function checkValidity (datetime) {
+    datetime = new Date(datetime).getTime();
+    const now = new Date().getTime();
+    if (isNaN(datetime)) {
+        return false;
+    }
+   const milisec_diff = datetime - now;
+    // Zero Time Trigger
+    if (milisec_diff <= 0) {
+        return false;
+    } else {
+      return true;
+    }
+  }
+
 /*
     METHOD: POST
     INFO  : Handle create new Inquiry Quote on POST.
@@ -79,6 +94,7 @@ exports.create_post = function(req, res) {
         discharge_tolerance: dischargeData[i].discharge_tolerance
         });
     }
+
     var pat = new inquiryQuote({
         segergation: req.body.shipping.segergation,
         tank_preparation: req.body.shipping.tank_preparation,
@@ -93,6 +109,7 @@ exports.create_post = function(req, res) {
         units: req.body.quote.units,
         required_validity_date: req.body.quote.required_validity_date,
         required_validity_time: req.body.quote.required_validity_time,
+        validity_status: true,
         load: loadData,
         discharge: dischargeList, 
         added_by: req.body.added_by
@@ -188,6 +205,24 @@ exports.quote_update_price = function(req, res) {
         }
     });
 };
+
+exports.update_validity = (req, res) => {
+    inquiryQuote.findByIdAndUpdate(req.body.quote_id, { $set: { 
+        validity_status: false
+    }}, function (err) {
+        if(err) {
+            res.json({
+               success: false,
+               message:'No, Inquiry Quote Found!!'
+            });
+        } else {
+            res.json({
+                success: true,
+                message:'Quote Validity Is Expired.'
+            });
+        }
+    });
+}
 
 // Handle Inquiry Qoute details delete on POST.
 exports.quote_delete_details_post = function(req, res) {

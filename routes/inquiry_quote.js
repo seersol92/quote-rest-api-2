@@ -17,6 +17,8 @@ router.post('/update-price', inquiry_controller.quote_update_price);
 // update price details
 router.post('/update-detail', inquiry_controller.update_detail);
 
+router.post('/update-validity', inquiry_controller.update_validity);
+
 router.post('/price-status', inquiry_controller.quote_update_price_status);
 
 // POST request to delete  Post.
