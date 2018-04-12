@@ -1,5 +1,7 @@
+const express = require('express');
 const inquiryQuote = require('../models/inquiry_quote'); //import  model schema
-var ObjectId = require('mongodb').ObjectID; 
+const ObjectId = require('mongodb').ObjectID;
+const Mail = require('./../config/node-mailer-config');
 
 function upperCaseFirst(str){
     return str.charAt(0).toUpperCase() + str.substring(1);
@@ -122,6 +124,17 @@ exports.create_post = function(req, res) {
                error: err
             });
         } else {
+            let users = [
+                {
+                    name: req.body.added_by,
+                    email: 'hamad.pixiders@gmail.com',
+                    subject:'Registered New Quote',
+                    data: {
+                        app: 'mean stack'
+                    }
+                }
+            ];
+            Mail.sendEmail( 'quote', users); // template , userinfo
             res.json({
                 success: true,
                 message:'Inquiry Quote Has Been Created Successfully!!',

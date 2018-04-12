@@ -60,3 +60,38 @@ exports.create_post = function(req, res) {
            });
 	 }
 };
+
+exports.update_detail = (req, res) => {
+    content.findByIdAndUpdate(req.body.content_id, 
+        { $set: 
+            { name: req.body.updated_name }
+        }, function(err, numAffected) {
+            if(err || numAffected.ok == 0) {
+                res.json({
+                    success: false,
+                    message:'There is something wrong!!'
+                });
+            } else {
+                res.json({
+                    success: true,
+                    message:'Data Updated Successfully!!'
+                });
+            }
+    });   
+}
+
+exports.delete_detail = (req, res) => {
+    content.deleteOne({ _id : req.body.content_id } , function(err, numAffected) {
+        if(err || numAffected.ok == 0) {
+            res.json({
+               success: false,
+               message:'No, Data Found!!'
+            });
+        } else {
+            res.json({
+                success: true,
+                message:'Data Deleted Successfully!!'
+            });
+        }
+    });
+}   
