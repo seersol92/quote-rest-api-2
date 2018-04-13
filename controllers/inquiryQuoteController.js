@@ -55,6 +55,7 @@ function checkValidity (datetime) {
 exports.create_post = function(req, res) {
     let loadData = req.body.load;
     let dischargeData = req.body.discharge;
+    let price = req.body.quote_price
     const loadList = [];
     const dischargeList =[];
     for (let i = 0; i < loadData.length; i++) {
@@ -113,8 +114,11 @@ exports.create_post = function(req, res) {
         required_validity_time: req.body.quote.required_validity_time,
         validity_status: true,
         load: loadData,
-        discharge: dischargeList, 
-        added_by: req.body.added_by
+        discharge: dischargeList,
+        price_request:  req.body.quote.price_request,
+        status: 'pending',
+        added_by: req.body.added_by,
+        added_by_user_id: req.body.quote.user_id
     }); 
     pat.save(function(err, quote){
         if(err) {
@@ -163,6 +167,7 @@ exports.quote_delete_post = function(req, res) {
 
 // Handle  price status  on POST. Accept / Reject
 exports.quote_update_price_status = function(req, res) {
+    update_status(req.body.quote_id, req.body.status);
     inquiryQuote.update(
         { 
           "_id"       : ObjectId(req.body.quote_id) , 
@@ -192,9 +197,44 @@ exports.quote_update_price_status = function(req, res) {
 };
 
 // Handle  price  on POST.
+function update_validity_detail(quote_id, updated_price) {
+inquiryQuote.findByIdAndUpdate(quote_id, { $set: { 
+        required_validity_date: updated_price.date,
+        required_validity_time: updated_price.time,
+        price_request:  false,
+        status: 'pending'
+    }}, function (err) {
+        if(err) {
+            res.json({
+               success: false,
+               message:'No, Inquiry Quote Found!!'
+            });
+        } else {
+           return true
+        }
+    });
+}
+
+// Handle  price  on POST.
+function update_status(quote_id, status) {
+inquiryQuote.findByIdAndUpdate(quote_id, { $set: { 
+        status: status
+    }}, function (err) {
+        if(err) {
+            res.json({
+                success: false,
+                message:'No, Inquiry Quote Found!!'
+            });
+        } else {
+            return true
+        }
+    });
+}
+
 exports.quote_update_price = function(req, res) {
      
     const updated_price =  req.body.updated_price;
+    update_validity_detail(req.body.quote_id, updated_price);
     inquiryQuote.findByIdAndUpdate(req.body.quote_id, { $push: { price: 
         {
             price:  updated_price.price,

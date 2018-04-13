@@ -47,18 +47,26 @@ const DischargeSchema = new Schema({
     discharge_tolerance: String
 });
 
+const quoteStatus = new Schema({
+    quoted_by: String,
+    status: String,
+    is_admin: Boolean   
+});
+
 /**
  * @Child Schema Price 
  * 
  */
 
 const PriceSchema = new Schema({
+    new_request: Boolean,
     price: String,
     date: {type: Date},
     time: String,
     comments: String,
     quoted_by: String,
-    status: String
+    status: String,
+    is_admin: Boolean
 });
 
 /*
@@ -82,11 +90,14 @@ const InquiryQuoteSchema = new Schema({
     required_validity_time: {type: String},
     validity_status: { type: Boolean},  
     price: [PriceSchema],
+    price_request: {type: Boolean},
     load: [LoadSchema],
     discharge: [DischargeSchema],
     user: {type: Schema.Types.ObjectId, ref: 'User'},
     added_by: {type: String},
-    dateadded: { type: Date, default: Date.now }
+    status: {type: String},
+    dateadded: { type: Date, default: Date.now },
+    added_by_user_id: {type: String}
 });
 
 
