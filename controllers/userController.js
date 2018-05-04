@@ -22,6 +22,25 @@ exports.user_list = function(req, res) {
     });
 };
 
+// Display list of user list.
+exports.get_user_by_id = function(req, res) {
+    user.getUserByUsername(req.params.id, (err, user) => {
+   // user.getUserById(req.params.id, (err, user) => {
+        if (err) {
+            res.json({
+                success: false,
+                err: err
+            });
+        } else {
+            res.json({
+                success: true,
+                data: user
+            });
+        }
+    });
+};
+
+
 // Display detail page for a specific Company.
 exports.user_detail = function(req, res) {
     res.send('NOT IMPLEMENTED: Book detail: ' + req.params.id);

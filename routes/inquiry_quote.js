@@ -8,6 +8,8 @@ const inquiry_controller = require('../controllers/inquiryQuoteController');
 // GET  list of quote.
 router.get('/', inquiry_controller.quote_list);
 
+//get cargos by user name
+router.get('/:name', inquiry_controller.get_quotes_by_name);
 // POST request for creating new inquiry.
 router.post('/create', inquiry_controller.create_post);
 

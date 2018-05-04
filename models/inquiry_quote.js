@@ -93,6 +93,7 @@ const InquiryQuoteSchema = new Schema({
     price_request: {type: Boolean},
     load: [LoadSchema],
     discharge: [DischargeSchema],
+    quote_comments: {type: String},
     user: {type: Schema.Types.ObjectId, ref: 'User'},
     added_by: {type: String},
     status: {type: String},

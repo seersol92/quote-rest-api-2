@@ -1,7 +1,8 @@
 const express = require('express');
 const inquiryQuote = require('../models/inquiry_quote'); //import  model schema
-const ObjectId = require('mongodb').ObjectID;
 const Mail = require('./../config/node-mailer-config');
+const User = require('../models/user'); //import user  model schema
+const ObjectId = require('mongodb').ObjectID;
 
 function upperCaseFirst(str){
     return str.charAt(0).toUpperCase() + str.substring(1);
@@ -28,10 +29,48 @@ exports.quote_list = function(req, res) {
        });
 };
 
+exports.get_quotes_by_name = function(req, res) {
+    inquiryQuote.find({"added_by": req.params.name} , function(err, cargo_list) {
+    if(err){
+            res.json({
+                success: false,
+                errors:err
+            });
+        } else {
+            res.json({
+            success: true,
+            data: cargo_list
+        });
+        }
+    });
+};
+
+function get_target_quote (params) {
+    inquiryQuote.find({"added_by": req.params.name}  , function(err, cargo_list) {
+        if(err){
+            return false;
+              
+            } else {
+                return  cargo_list
+            }
+        });
+}
+
 // Display detail page for a specific Inquiry Quote.
 exports.content_detail = function(req, res) {
     res.send('NOT IMPLEMENTED: Book detail: ' + req.params.id);
 };
+
+function getUser(username) {
+  User.getUserByUsername(username, (err, user) => {
+    if (err) {
+        return false;
+    } else {
+        console.log(user);
+        return  user;
+    }
+    });
+}
 
 function checkValidity (datetime) {
     datetime = new Date(datetime).getTime();
@@ -116,9 +155,9 @@ exports.create_post = function(req, res) {
         load: loadData,
         discharge: dischargeList,
         price_request:  req.body.quote.price_request,
+        quote_comments: req.body.quote.quote_comments,
         status: 'pending',
-        added_by: req.body.added_by,
-        added_by_user_id: req.body.quote.user_id
+        added_by: req.body.added_by
     }); 
     pat.save(function(err, quote){
         if(err) {
@@ -128,21 +167,25 @@ exports.create_post = function(req, res) {
                error: err
             });
         } else {
-            let users = [
-                {
-                    name: req.body.added_by,
-                    email: 'hamad.pixiders@gmail.com',
-                    subject:'Registered New Quote',
-                    data: {
-                        app: 'mean stack'
+            User.getUserByUsername(req.body.added_by, (err, user) => {
+            if (user) {
+                let users = [
+                    {
+                        name: req.body.added_by,
+                        email: user.email,
+                        subject:'Registered New Quote',
+                        load: loadList[0],
+                        discharge: dischargeList[0],
+                        quote_validity: req.body.quote.required_validity_date + '- ' + req.body.quote.required_validity_time
                     }
-                }
-            ];
-            Mail.sendEmail( 'quote', users); // template , userinfo
-            res.json({
-                success: true,
-                message:'Inquiry Quote Has Been Created Successfully!!',
-                quote: quote
+                ];
+                Mail.sendEmail( 'quote', users); // template , user info
+                res.json({
+                    success: true,
+                    message:'Inquiry Quote Has Been Created Successfully!!',
+                    quote: quote
+                });
+            }
             });
         }
     });
@@ -168,7 +211,7 @@ exports.quote_delete_post = function(req, res) {
 // Handle  price status  on POST. Accept / Reject
 exports.quote_update_price_status = function(req, res) {
     update_status(req.body.quote_id, req.body.status);
-    inquiryQuote.update(
+    inquiryQuote.findOneAndUpdate(
         { 
           "_id"       : ObjectId(req.body.quote_id) , 
           "price._id" : ObjectId(req.body.price_id)
@@ -179,18 +222,56 @@ exports.quote_update_price_status = function(req, res) {
             "price.$.status": req.body.status
         } 
         },
-        function(err, numAffected) {
-            if(err || numAffected.ok == 0) {
+        function(err, quote_list) {
+            if(err ) {
                 res.json({
                    success: false,
                    message:'Operation Failed. There is something wrong to ' + req.body.status + ' price.',
                    error: err
                 });
             } else {
-                res.json({
-                    success: true,
-                    message: 'Quote price has been ' +req.body.status+ ' successfully!!'
-                });
+
+               
+                /**
+                /* 
+                 *  When admin take action to submitted quote we need to notify quoted user
+                 *  get quoted by user information  from quote id and send email to user  
+                 * 
+                 */
+                let target_notify = '';
+                if (req.body.user_info.type) 
+                    {
+                        target_notify = quote_list.added_by;
+                    } 
+                   /*
+                    * When user take action to submitted quote we need to notify  user
+                    * Get information of the admin responded to quote from price[0].quoted_by  and send email
+                    */
+                    else 
+                    {
+                        target_notify = quote_list.price['0'].quoted_by; 
+                    }
+                    User.getUserByUsername(target_notify, (err, user) => {
+                        if (user) {
+                            let users = [
+                                {
+                                    name: user.username,
+                                    email: user.email,
+                                    subject:'Quote status ' + req.body.status,
+                                    status: 'Quote price has been ' +req.body.status + '!!',
+                                    new_price: '',
+                                    quote_validity: '',
+                                    load: quote_list.load[0],
+                                    discharge: quote_list.discharge[0],
+                                }
+                            ];
+                            Mail.sendEmail( 'quote-notification', users); // template , user info
+                        }
+                        res.json({
+                            success: true,
+                            message: 'Quote price has been ' +req.body.status+ ' successfully!!'
+                        });
+                    });
             }
         }
       )
@@ -217,7 +298,7 @@ inquiryQuote.findByIdAndUpdate(quote_id, { $set: {
 
 // Handle  price  on POST.
 function update_status(quote_id, status) {
-inquiryQuote.findByIdAndUpdate(quote_id, { $set: { 
+    inquiryQuote.findByIdAndUpdate(quote_id, { $set: { 
         status: status
     }}, function (err) {
         if(err) {
@@ -234,6 +315,7 @@ inquiryQuote.findByIdAndUpdate(quote_id, { $set: {
 exports.quote_update_price = function(req, res) {
      
     const updated_price =  req.body.updated_price;
+    const is_admin = req.body.user_flag;
     update_validity_detail(req.body.quote_id, updated_price);
     inquiryQuote.findByIdAndUpdate(req.body.quote_id, { $push: { price: 
         {
@@ -244,17 +326,47 @@ exports.quote_update_price = function(req, res) {
             quoted_by: updated_price.quoted_by,
             status: updated_price.status
 
-        } }}, function (err) {
+        } }}, function (err, quote_list) {
         if(err) {
             res.json({
                success: false,
                message:'No, Inquiry Quote Found!!'
             });
         } else {
-            res.json({
-                success: true,
-                message:'Price Updated Successfully!!'
-            });
+            let target_notify = '';
+                if (is_admin) 
+                    {
+                        target_notify = quote_list.added_by;
+                    } 
+                   /*
+                    * When user take action to submitted quote we need to notify  user
+                    * Get information of the admin responded to quote from price[0].quoted_by  and send email
+                    */
+                    else 
+                    {
+                        target_notify = quote_list.price['0'].quoted_by; 
+                    }
+                    User.getUserByUsername(target_notify, (err, user) => {
+                        if (user) {
+                            let users = [
+                                {
+                                    name: user.username,
+                                    email: user.email,
+                                    subject:'Quote price updated',
+                                    status: 'Quote price has been updated!!',
+                                    new_price: 'New Price:' + updated_price.price + 'USD',
+                                    quote_validity: 'This quote will be valid before ' + updated_price.date.split('T')[0] + '-' +updated_price.time,
+                                    load: quote_list.load[0],
+                                    discharge: quote_list.discharge[0],
+                                }
+                            ];
+                            Mail.sendEmail( 'quote-notification', users); // template , user info
+                        }
+                        res.json({
+                            success: true,
+                            message:'Price Updated Successfully!!'
+                        });
+                    });
         }
     });
 };

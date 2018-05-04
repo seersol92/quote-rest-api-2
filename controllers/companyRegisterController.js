@@ -79,10 +79,7 @@ exports.book_delete_get = function(req, res) {
     res.send('NOT IMPLEMENTED: Book delete GET');
 };
 
-// Handle book delete on POST.
-exports.book_delete_post = function(req, res) {
-    res.send('NOT IMPLEMENTED: Book delete POST');
-};
+
 
 // Display book update form on GET.
 exports.book_update_get = function(req, res) {

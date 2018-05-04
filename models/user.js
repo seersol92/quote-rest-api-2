@@ -50,7 +50,18 @@ userSchema.pre('save', function(next) {
   })
 });
 
+userSchema.statics.getUserById = function(id, callback) {
+  User.findById(id, callback);
+}
+
+userSchema.statics.getUserByUsername = function(username, callback) {
+  let query = { 'username': username};
+  User.findOne(query, callback);
+}
+
 userSchema.methods.comparePassword = function(password){
   return bcrypt.compareSync(password, this.password);
 };
-module.exports = mongoose.model('User', userSchema);
+
+const User = mongoose.model('User', userSchema);
+module.exports = User;
